@@ -1,0 +1,76 @@
+### Változók
+@baseUrl = http://localhost:8080/api
+@courseId = 42
+
+### ── JELENTKEZÉS ──────────────────────────────────────────────
+
+### Egy alkalmazott jelentkezése kurzusra
+POST {{baseUrl}}/enrollments
+Content-Type: application/json
+
+{
+  "courseId": 42,
+  "employeeIds": [101]
+}
+
+###
+
+### Több alkalmazott egyszerre
+POST {{baseUrl}}/enrollments
+Content-Type: application/json
+
+{
+  "courseId": 42,
+  "employeeIds": [102, 103, 104]
+}
+
+###
+
+### Másik kurzusra jelentkezés
+POST {{baseUrl}}/enrollments
+Content-Type: application/json
+
+{
+  "courseId": 99,
+  "employeeIds": [101, 201]
+}
+
+###
+
+### ── LEIRATKOZÁS ───────────────────────────────────────────────
+
+### Egy alkalmazott leiratkozása
+POST {{baseUrl}}/courses/{{courseId}}/deregistrations
+Content-Type: application/json
+
+{
+  "employeeIds": [101]
+}
+
+###
+
+### Több alkalmazott leiratkozása egyszerre
+POST {{baseUrl}}/courses/{{courseId}}/deregistrations
+Content-Type: application/json
+
+{
+  "employeeIds": [102, 103]
+}
+
+###
+
+### ── LEKÉRDEZÉSEK ──────────────────────────────────────────────
+
+### Összes kurzus jelentkezéseinek listája
+GET {{baseUrl}}/enrollments
+
+###
+
+### Egy adott kurzus jelentkezői
+GET {{baseUrl}}/courses/{{courseId}}/enrollments
+
+###
+
+### Másik kurzus jelentkezői
+GET {{baseUrl}}/courses/99/enrollments
+
