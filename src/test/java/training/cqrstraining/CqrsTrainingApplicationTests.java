@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import training.cqrstraining.api.CreateDeregistrationRequest;
+import training.cqrstraining.api.CreateCancellationRequest;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
 import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
@@ -79,24 +79,24 @@ class CqrsTrainingApplicationTests {
     }
 
     @Test
-    void deregisterEmployeesThroughOperationResource() {
+    void cancelEmployeesThroughOperationResource() {
         restTestClient.post().uri("/api/enrollments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new CreateEnrollmentCommand(12L, List.of(300L, 301L, 302L)))
                 .exchange()
                 .expectStatus().isCreated();
 
-        EnrollmentDto afterDeregister = restTestClient.post().uri("/api/courses/12/deregistrations")
+        EnrollmentDto afterCancellation = restTestClient.post().uri("/api/courses/12/cancellations")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new CreateDeregistrationRequest(List.of(300L, 302L)))
+                .body(new CreateCancellationRequest(List.of(300L, 302L)))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(EnrollmentDto.class)
                 .returnResult().getResponseBody();
 
-        assertThat(afterDeregister).isNotNull();
-        assertThat(afterDeregister.courseId()).isEqualTo(12L);
-        assertThat(afterDeregister.employeeIds()).containsExactly(301L);
+        assertThat(afterCancellation).isNotNull();
+        assertThat(afterCancellation.courseId()).isEqualTo(12L);
+        assertThat(afterCancellation.employeeIds()).containsExactly(301L);
 
         EnrollmentDto listed = restTestClient.get().uri("/api/courses/12/enrollments")
                 .exchange()
@@ -130,10 +130,10 @@ class CqrsTrainingApplicationTests {
                 .exchange()
                 .expectStatus().isCreated();
 
-        // Deregister one employee to verify decrement in the read-model projection
-        restTestClient.post().uri("/api/courses/20/deregistrations")
+        // Cancel one employee to verify decrement in the read-model projection
+        restTestClient.post().uri("/api/courses/20/cancellations")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new CreateDeregistrationRequest(List.of(401L)))
+                .body(new CreateCancellationRequest(List.of(401L)))
                 .exchange()
                 .expectStatus().isOk();
 

@@ -4,7 +4,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
-import training.cqrstraining.application.command.CreateDeregistrationCommand;
+import training.cqrstraining.application.command.CreateCancellationCommand;
 import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
 import training.cqrstraining.application.query.EnrollmentQueryRepository;
@@ -54,7 +54,7 @@ public class EnrollmentApplicationService {
     }
 
     @Transactional
-    public EnrollmentDto deregister(CreateDeregistrationCommand command) {
+    public EnrollmentDto cancel(CreateCancellationCommand command) {
         CourseId courseId = new CourseId(command.courseId());
 
         Enrollment enrollment = enrollmentRepository.findByCourseId(courseId)

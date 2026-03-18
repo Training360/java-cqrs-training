@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import training.cqrstraining.application.command.CreateDeregistrationCommand;
+import training.cqrstraining.application.command.CreateCancellationCommand;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
 import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
@@ -34,12 +34,12 @@ public class EnrollmentController {
         return enrollmentService.enroll(command);
     }
 
-    @PostMapping("/courses/{courseId}/deregistrations")
-    public EnrollmentDto deregister(
+    @PostMapping("/courses/{courseId}/cancellations")
+    public EnrollmentDto cancel(
             @PathVariable @Positive Long courseId,
-            @Valid @RequestBody CreateDeregistrationRequest request
+            @Valid @RequestBody CreateCancellationRequest request
     ) {
-        return enrollmentService.deregister(new CreateDeregistrationCommand(courseId, request.employeeIds()));
+        return enrollmentService.cancel(new CreateCancellationCommand(courseId, request.employeeIds()));
     }
 
     @GetMapping("/enrollments")

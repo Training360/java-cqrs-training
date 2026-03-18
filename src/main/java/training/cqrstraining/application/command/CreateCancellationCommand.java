@@ -1,4 +1,4 @@
-package training.cqrstraining.api;
+package training.cqrstraining.application.command;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -7,11 +7,12 @@ import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.List;
 
-public record CreateDeregistrationRequest(
+public record CreateCancellationCommand(
+        @NotNull @Positive Long courseId,
         @NotNull @Size(min = 1) List<@NotNull @Positive Long> employeeIds
 ) {
 
-    public CreateDeregistrationRequest {
+    public CreateCancellationCommand {
         if (employeeIds != null) {
             HashSet<Long> unique = new HashSet<>();
             for (Long employeeId : employeeIds) {
@@ -22,3 +23,4 @@ public record CreateDeregistrationRequest(
         }
     }
 }
+

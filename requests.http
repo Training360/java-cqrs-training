@@ -40,7 +40,7 @@ Content-Type: application/json
 ### ── LEIRATKOZÁS ───────────────────────────────────────────────
 
 ### Egy alkalmazott leiratkozása
-POST {{baseUrl}}/courses/{{courseId}}/deregistrations
+POST {{baseUrl}}/courses/{{courseId}}/cancellations
 Content-Type: application/json
 
 {
@@ -50,7 +50,7 @@ Content-Type: application/json
 ###
 
 ### Több alkalmazott leiratkozása egyszerre
-POST {{baseUrl}}/courses/{{courseId}}/deregistrations
+POST {{baseUrl}}/courses/{{courseId}}/cancellations
 Content-Type: application/json
 
 {
