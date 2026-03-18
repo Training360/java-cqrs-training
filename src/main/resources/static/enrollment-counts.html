@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kurzus jelentkezések</title>
+  <link rel="stylesheet" href="enrollment-counts.css" />
+</head>
+<body>
+
+  <header>
+    <h1>📚 Kurzus jelentkezések</h1>
+    <p>Kurzusonkénti jelentkezési statisztikák</p>
+  </header>
+
+  <div class="card">
+    <div class="card-toolbar">
+      <span id="last-updated">Frissítés folyamatban…</span>
+      <button id="refresh-btn">
+        <div class="spinner" id="spinner"></div>
+        🔄 Frissítés
+      </button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Kurzus azonosító</th>
+          <th>Jelentkezők száma</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr id="status-row">
+          <td colspan="3">Adatok betöltése…</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="footer">Forrás: <code>/api/courses/enrollment-counts</code></p>
+
+  <script src="enrollment-counts.js"></script>
+</body>
+</html>
+
