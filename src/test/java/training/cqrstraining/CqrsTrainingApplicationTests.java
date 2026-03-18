@@ -11,6 +11,8 @@ import training.cqrstraining.api.CreateCancellationRequest;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
 import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
+import training.cqrstraining.infrastructure.persistence.OutboxEventJpaRepository;
+import training.cqrstraining.infrastructure.persistence.OutboxEventStatus;
 
 import java.util.Map;
 import java.util.List;
@@ -24,6 +26,9 @@ class CqrsTrainingApplicationTests {
 
     @Autowired
     RestTestClient restTestClient;
+
+    @Autowired
+    OutboxEventJpaRepository outboxEventRepository;
 
     @Test
     void contextLoads() {
@@ -157,6 +162,20 @@ class CqrsTrainingApplicationTests {
         assertThat(countsByCourse).containsEntry(22L, 1L);
     }
 
+    @Test
+    void outboxEventsAreEventuallyPublished() {
+        restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(30L, List.of(501L, 502L)))
+                .exchange()
+                .expectStatus().isCreated();
+
+        awaitPublishedOutboxAtLeast(1L);
+
+        assertThat(outboxEventRepository.countByStatus(OutboxEventStatus.PUBLISHED)).isGreaterThanOrEqualTo(1L);
+        assertThat(outboxEventRepository.countByStatus(OutboxEventStatus.DEAD)).isZero();
+    }
+
     private List<CourseEnrollmentCountDto> awaitEnrollmentCounts(Supplier<List<CourseEnrollmentCountDto>> fetcher) {
         for (int attempt = 0; attempt < 20; attempt++) {
             List<CourseEnrollmentCountDto> counts = fetcher.get();
@@ -184,5 +203,20 @@ class CqrsTrainingApplicationTests {
         }
 
         return fetcher.get();
+    }
+
+    private void awaitPublishedOutboxAtLeast(long minimumPublished) {
+        for (int attempt = 0; attempt < 20; attempt++) {
+            if (outboxEventRepository.countByStatus(OutboxEventStatus.PUBLISHED) >= minimumPublished) {
+                return;
+            }
+
+            try {
+                Thread.sleep(100L);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for outbox publication.", ex);
+            }
+        }
     }
 }

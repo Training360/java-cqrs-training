@@ -4,10 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import training.cqrstraining.infrastructure.event.stream.EmployeesEnrollmentsUpdatedStreamEvent;
-import training.cqrstraining.infrastructure.event.stream.EventType;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 @Configuration
@@ -15,26 +14,17 @@ public class EnrollmentEventsStreamConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(EnrollmentEventsStreamConsumer.class);
 
-    private final EnrollmentCountProjectionUpdater projectionUpdater;
+    private final EnrollmentEventsMessageHandler messageHandler;
 
-    public EnrollmentEventsStreamConsumer(EnrollmentCountProjectionUpdater projectionUpdater) {
-        this.projectionUpdater = projectionUpdater;
+    public EnrollmentEventsStreamConsumer(EnrollmentEventsMessageHandler messageHandler) {
+        this.messageHandler = messageHandler;
     }
 
     @Bean
-    public Consumer<EmployeesEnrollmentsUpdatedStreamEvent> enrollmentEventsConsumer() {
-        return event -> {
-            if (event.eventType() ==  EventType.ENROLLED) {
-                projectionUpdater
-                    .onEmployeesEnrolled(event.courseId(), event.employeeIds().size());}
-            else if (event.eventType() ==  EventType.CANCELLED) { projectionUpdater.onEmployeesCancelled(event.courseId(), event.employeeIds().size()); }
-            else {
-                log.warn("Skipping unsupported event type: {}", event.getClass().getSimpleName());
-            }
+    public Consumer<Message<EmployeesEnrollmentsUpdatedStreamEvent>> enrollmentEventsConsumer() {
+        return message -> {
+            log.debug("Received stream event for course {}", message.getPayload().courseId());
+            messageHandler.handle(message);
         };
     }
-
-
-
 }
-

@@ -1,6 +1,5 @@
 package training.cqrstraining.application.service;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
@@ -13,6 +12,7 @@ import training.cqrstraining.domain.model.CourseId;
 import training.cqrstraining.domain.model.EmployeeId;
 import training.cqrstraining.domain.model.Enrollment;
 import training.cqrstraining.domain.repository.EnrollmentRepository;
+import training.cqrstraining.infrastructure.event.OutboxEventStore;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,14 +24,14 @@ public class EnrollmentApplicationService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final EnrollmentQueryRepository enrollmentQueryRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final OutboxEventStore outboxEventStore;
 
     public EnrollmentApplicationService(EnrollmentRepository enrollmentRepository,
                                         EnrollmentQueryRepository enrollmentQueryRepository,
-                                        ApplicationEventPublisher eventPublisher) {
+                                        OutboxEventStore outboxEventStore) {
         this.enrollmentRepository = enrollmentRepository;
         this.enrollmentQueryRepository = enrollmentQueryRepository;
-        this.eventPublisher = eventPublisher;
+        this.outboxEventStore = outboxEventStore;
     }
 
     @Transactional
@@ -46,8 +46,7 @@ public class EnrollmentApplicationService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         enrollment.enrollAll(employeeIds);
-        // Itt kell elküldeni, mert a saved példányban már nem lesznek benne
-        enrollment.pullEvents().forEach(eventPublisher::publishEvent);
+        outboxEventStore.store(enrollment.pullEvents());
         Enrollment saved = enrollmentRepository.save(enrollment);
 
         return toDto(saved);
@@ -65,7 +64,7 @@ public class EnrollmentApplicationService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         enrollment.cancelAll(employeeIds);
-        enrollment.pullEvents().forEach(eventPublisher::publishEvent);
+        outboxEventStore.store(enrollment.pullEvents());
 
         Enrollment saved = enrollmentRepository.save(enrollment);
 
