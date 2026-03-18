@@ -74,3 +74,9 @@ GET {{baseUrl}}/courses/{{courseId}}/enrollments
 ### Másik kurzus jelentkezői
 GET {{baseUrl}}/courses/99/enrollments
 
+###
+
+### ── CQRS QUERY OLDAL – AGGREGÁLÁSOK ──────────────────────────
+
+### Hány darab jelentkező van képzésenként (DB szinten aggregált)
+GET {{baseUrl}}/courses/enrollment-counts

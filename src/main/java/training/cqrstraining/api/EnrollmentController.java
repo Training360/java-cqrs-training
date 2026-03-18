@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import training.cqrstraining.application.command.CreateDeregistrationCommand;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
+import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
 import training.cqrstraining.application.service.EnrollmentApplicationService;
 
@@ -49,5 +50,10 @@ public class EnrollmentController {
     @GetMapping("/courses/{courseId}/enrollments")
     public EnrollmentDto listByCourse(@PathVariable @Positive Long courseId) {
         return enrollmentService.listByCourse(courseId);
+    }
+
+    @GetMapping("/courses/enrollment-counts")
+    public List<CourseEnrollmentCountDto> getEnrollmentCounts() {
+        return enrollmentService.countEnrollmentsByCourse();
     }
 }

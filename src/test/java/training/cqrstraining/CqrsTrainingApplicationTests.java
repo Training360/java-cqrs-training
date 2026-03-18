@@ -1,15 +1,15 @@
 package training.cqrstraining;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import training.cqrstraining.api.CreateDeregistrationRequest;
-import training.cqrstraining.api.EnrollmentController;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
+import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
 
 import java.util.List;
@@ -19,9 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
 class CqrsTrainingApplicationTests {
-
-    @Autowired
-    EnrollmentController enrollmentController;
 
     @Autowired
     RestTestClient restTestClient;
@@ -108,5 +105,41 @@ class CqrsTrainingApplicationTests {
         assertThat(listed).isNotNull();
         assertThat(listed.courseId()).isEqualTo(12L);
         assertThat(listed.employeeIds()).containsExactly(301L);
+    }
+
+    @Test
+    void queryEnrollmentCountsByCourse() {
+        // Enroll employees to different courses
+        restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(20L, List.of(400L, 401L, 402L)))
+                .exchange()
+                .expectStatus().isCreated();
+
+        restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(21L, List.of(410L, 411L)))
+                .exchange()
+                .expectStatus().isCreated();
+
+        restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(22L, List.of(420L)))
+                .exchange()
+                .expectStatus().isCreated();
+
+        // Query enrollment counts
+        var counts = restTestClient.get().uri("/api/courses/enrollment-counts")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<List<CourseEnrollmentCountDto>>() {})
+                .returnResult().getResponseBody();
+
+        assertThat(counts).isNotNull();
+        assertThat(counts).hasSize(3)
+                .extracting(CourseEnrollmentCountDto::courseId)
+                .containsExactlyInAnyOrder(20L, 21L, 22L);
+        assertThat(counts).extracting(CourseEnrollmentCountDto::enrollmentCount)
+                .containsExactlyInAnyOrder(3L, 2L, 1L);
     }
 }

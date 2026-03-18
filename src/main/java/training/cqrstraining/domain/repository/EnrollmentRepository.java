@@ -12,6 +12,5 @@ public interface EnrollmentRepository {
 
     Enrollment save(Enrollment enrollment);
 
-
     List<Enrollment> findAll();
 }

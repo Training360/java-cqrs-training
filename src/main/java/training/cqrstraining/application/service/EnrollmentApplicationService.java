@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import training.cqrstraining.application.command.CreateEnrollmentCommand;
 import training.cqrstraining.application.command.CreateDeregistrationCommand;
+import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
+import training.cqrstraining.application.query.EnrollmentQueryRepository;
 import training.cqrstraining.domain.exception.EnrollmentNotFoundException;
 import training.cqrstraining.domain.model.CourseId;
 import training.cqrstraining.domain.model.EmployeeId;
@@ -21,11 +23,14 @@ import java.util.stream.Collectors;
 public class EnrollmentApplicationService {
 
     private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentQueryRepository enrollmentQueryRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public EnrollmentApplicationService(EnrollmentRepository enrollmentRepository,
+                                        EnrollmentQueryRepository enrollmentQueryRepository,
                                         ApplicationEventPublisher eventPublisher) {
         this.enrollmentRepository = enrollmentRepository;
+        this.enrollmentQueryRepository = enrollmentQueryRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -79,6 +84,11 @@ public class EnrollmentApplicationService {
                 .stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseEnrollmentCountDto> countEnrollmentsByCourse() {
+        return enrollmentQueryRepository.countEnrollmentsByCourse();
     }
 
     private EnrollmentDto toDto(Enrollment enrollment) {
