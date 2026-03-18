@@ -34,12 +34,12 @@ public class EnrollmentEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEmployeesEnrolled(EmployeesEnrolledEvent event) {
-        send(new EmployeesEnrollmentsUpdatedStreamEvent(EventType.ENROLLED, event.courseId().value(), toEmployeeIds(event.employeeIds())));
+        send(new EmployeesEnrollmentsUpdatedStreamEvent(EventType.ENROLLED, event.courseId().value(), toEmployeeIds(event.employeeIds()), event.totalEnrollmentCount()));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEmployeesCancelled(EmployeesCancelledEvent event) {
-        send(new EmployeesEnrollmentsUpdatedStreamEvent(EventType.CANCELLED, event.courseId().value(), toEmployeeIds(event.employeeIds())));
+        send(new EmployeesEnrollmentsUpdatedStreamEvent(EventType.CANCELLED, event.courseId().value(), toEmployeeIds(event.employeeIds()), event.totalEnrollmentCount()));
     }
 
     private void send(EnrollmentStreamEvent event) {

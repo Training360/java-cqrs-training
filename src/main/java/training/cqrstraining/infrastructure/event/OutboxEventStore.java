@@ -63,7 +63,8 @@ public class OutboxEventStore {
             return new EmployeesEnrollmentsUpdatedStreamEvent(
                     EventType.ENROLLED,
                     enrolledEvent.courseId().value(),
-                    toEmployeeIds(enrolledEvent.employeeIds())
+                    toEmployeeIds(enrolledEvent.employeeIds()),
+                    enrolledEvent.totalEnrollmentCount()
             );
         }
 
@@ -71,7 +72,8 @@ public class OutboxEventStore {
             return new EmployeesEnrollmentsUpdatedStreamEvent(
                     EventType.CANCELLED,
                     cancelledEvent.courseId().value(),
-                    toEmployeeIds(cancelledEvent.employeeIds())
+                    toEmployeeIds(cancelledEvent.employeeIds()),
+                    cancelledEvent.totalEnrollmentCount()
             );
         }
 

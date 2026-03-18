@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface CourseEnrollmentCountJpaRepository extends JpaRepository<CourseEnrollmentCountJpaEntity, Long> {
 
-	@Query("SELECT new training.cqrstraining.application.dto.CourseEnrollmentCountDto(c.courseId, c.enrollmentCount) " +
+	@Query("SELECT new training.cqrstraining.application.dto.CourseEnrollmentCountDto(c.courseId, c.totalEnrollmentCount) " +
 			"FROM CourseEnrollmentCountJpaEntity c ORDER BY c.courseId")
 	List<CourseEnrollmentCountDto> findCourseEnrollmentCounts();
 }

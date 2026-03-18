@@ -53,7 +53,7 @@ public class Enrollment {
             throw new IllegalArgumentException("Employee IDs are required.");
         }
         newEmployees.forEach(this::enroll);
-        domainEvents.add(new EmployeesEnrolledEvent(courseId, Set.copyOf(newEmployees)));
+        domainEvents.add(new EmployeesEnrolledEvent(courseId, Set.copyOf(newEmployees), (long) employeeIds.size()));
     }
 
     public void cancelAll(Set<EmployeeId> employeesToRemove) {
@@ -61,7 +61,7 @@ public class Enrollment {
             throw new IllegalArgumentException("Employee IDs are required.");
         }
         employeesToRemove.forEach(this::cancel);
-        domainEvents.add(new EmployeesCancelledEvent(courseId, Set.copyOf(employeesToRemove)));
+        domainEvents.add(new EmployeesCancelledEvent(courseId, Set.copyOf(employeesToRemove), (long) employeeIds.size()));
     }
 
     private void enroll(EmployeeId employeeId) {

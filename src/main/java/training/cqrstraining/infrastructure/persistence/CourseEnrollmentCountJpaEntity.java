@@ -13,27 +13,23 @@ public class CourseEnrollmentCountJpaEntity {
     @Column(name = "course_id", nullable = false)
     private Long courseId;
 
-    @Column(name = "enrollment_count", nullable = false)
-    private Long enrollmentCount;
+    @Column(name = "total_enrollment_count", nullable = false)
+    private Long totalEnrollmentCount;
 
     protected CourseEnrollmentCountJpaEntity() {
     }
 
-    public CourseEnrollmentCountJpaEntity(Long courseId, Long enrollmentCount) {
+    public CourseEnrollmentCountJpaEntity(Long courseId, Long totalEnrollmentCount) {
         this.courseId = courseId;
-        this.enrollmentCount = enrollmentCount;
+        this.totalEnrollmentCount = totalEnrollmentCount;
     }
 
     public Long getCourseId() {
         return courseId;
     }
 
-    public Long getEnrollmentCount() {
-        return enrollmentCount;
-    }
-
-    public void setEnrollmentCount(Long enrollmentCount) {
-        this.enrollmentCount = enrollmentCount;
+    public void setTotalEnrollmentCount(Long totalEnrollmentCount) {
+        this.totalEnrollmentCount = totalEnrollmentCount;
     }
 }
 

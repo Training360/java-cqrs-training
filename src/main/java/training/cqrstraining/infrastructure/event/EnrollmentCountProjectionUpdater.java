@@ -13,25 +13,24 @@ public class EnrollmentCountProjectionUpdater {
         this.countRepository = countRepository;
     }
 
-    public void onEmployeesEnrolled(Long courseId, int enrolledEmployeesCount) {
-        applyDelta(courseId, enrolledEmployeesCount);
+    public void onEmployeesEnrolled(Long courseId, Long totalEnrollmentCount) {
+        updateCount(courseId, totalEnrollmentCount);
     }
 
-    public void onEmployeesCancelled(Long courseId, int cancelledEmployeesCount) {
-        applyDelta(courseId, -cancelledEmployeesCount);
+    public void onEmployeesCancelled(Long courseId, Long totalEnrollmentCount) {
+        updateCount(courseId, totalEnrollmentCount);
     }
 
-    private void applyDelta(Long courseId, int delta) {
-        CourseEnrollmentCountJpaEntity readModel = countRepository.findById(courseId)
-                .orElseGet(() -> new CourseEnrollmentCountJpaEntity(courseId, 0L));
-
-        long updatedCount = Math.max(0L, readModel.getEnrollmentCount() + delta);
-        if (updatedCount == 0L) {
+    private void updateCount(Long courseId, Long totalEnrollmentCount) {
+        if (totalEnrollmentCount == 0L) {
             countRepository.deleteById(courseId);
             return;
         }
 
-        readModel.setEnrollmentCount(updatedCount);
+        CourseEnrollmentCountJpaEntity readModel = countRepository.findById(courseId)
+                .orElseGet(() -> new CourseEnrollmentCountJpaEntity(courseId, totalEnrollmentCount));
+
+        readModel.setTotalEnrollmentCount(totalEnrollmentCount);
         countRepository.save(readModel);
     }
 }
