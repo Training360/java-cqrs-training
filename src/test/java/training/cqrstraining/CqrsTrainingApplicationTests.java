@@ -1,103 +1,112 @@
 package training.cqrstraining;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.client.RestTestClient;
+import training.cqrstraining.api.CreateDeregistrationRequest;
+import training.cqrstraining.api.EnrollmentController;
+import training.cqrstraining.application.command.CreateEnrollmentCommand;
+import training.cqrstraining.application.dto.EnrollmentDto;
 
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureRestTestClient
 class CqrsTrainingApplicationTests {
 
     @Autowired
-    private MockMvc mockMvc;
+    EnrollmentController enrollmentController;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    RestTestClient restTestClient;
 
     @Test
     void contextLoads() {
     }
 
     @Test
-    void enrollAndListByCourse() throws Exception {
-        String createPayload = objectMapper.writeValueAsString(new EnrollmentRequest(10L, List.of(200L, 201L)));
+    void enrollAndListByCourse() {
+        EnrollmentDto enrolled = restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(10L, List.of(200L, 201L)))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(EnrollmentDto.class)
+                .returnResult().getResponseBody();
 
-        mockMvc.perform(post("/api/enrollments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createPayload))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.courseId").value(10))
-                .andExpect(jsonPath("$.employeeIds[0]").value(200))
-                .andExpect(jsonPath("$.employeeIds[1]").value(201));
+        assertThat(enrolled).isNotNull();
+        assertThat(enrolled.courseId()).isEqualTo(10L);
+        assertThat(enrolled.employeeIds()).containsExactly(200L, 201L);
 
-        mockMvc.perform(get("/api/courses/10/enrollments"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.courseId").value(10))
-                .andExpect(jsonPath("$.employeeIds[0]").value(200))
-                .andExpect(jsonPath("$.employeeIds[1]").value(201));
+        EnrollmentDto listed = restTestClient.get().uri("/api/courses/10/enrollments")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(EnrollmentDto.class)
+                .returnResult().getResponseBody();
+
+        assertThat(listed).isNotNull();
+        assertThat(listed.courseId()).isEqualTo(10L);
+        assertThat(listed.employeeIds()).containsExactly(200L, 201L);
     }
 
     @Test
-    void duplicateEnrollmentReturnsConflict() throws Exception {
-        String createPayload = objectMapper.writeValueAsString(new EnrollmentRequest(11L, List.of(201L)));
-        String conflictingPayload = objectMapper.writeValueAsString(new EnrollmentRequest(11L, List.of(201L, 202L)));
+    void duplicateEnrollmentReturnsConflict() {
+        restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(11L, List.of(201L)))
+                .exchange()
+                .expectStatus().isCreated();
 
-        mockMvc.perform(post("/api/enrollments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createPayload))
-                .andExpect(status().isCreated());
+        restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(11L, List.of(201L, 202L)))
+                .exchange()
+                .expectStatus().isEqualTo(409);
 
-        mockMvc.perform(post("/api/enrollments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(conflictingPayload))
-                .andExpect(status().isConflict());
+        EnrollmentDto listed = restTestClient.get().uri("/api/courses/11/enrollments")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(EnrollmentDto.class)
+                .returnResult().getResponseBody();
 
-        mockMvc.perform(get("/api/courses/11/enrollments"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.employeeIds.length()").value(1))
-                .andExpect(jsonPath("$.employeeIds[0]").value(201));
+        assertThat(listed).isNotNull();
+        assertThat(listed.employeeIds()).containsExactly(201L);
     }
 
     @Test
-    void deregisterEmployeesThroughOperationResource() throws Exception {
-        String createPayload = objectMapper.writeValueAsString(new EnrollmentRequest(12L, List.of(300L, 301L, 302L)));
-        String deregistrationPayload = objectMapper.writeValueAsString(new DeregistrationRequest(List.of(300L, 302L)));
+    void deregisterEmployeesThroughOperationResource() {
+        restTestClient.post().uri("/api/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateEnrollmentCommand(12L, List.of(300L, 301L, 302L)))
+                .exchange()
+                .expectStatus().isCreated();
 
-        mockMvc.perform(post("/api/enrollments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createPayload))
-                .andExpect(status().isCreated());
+        EnrollmentDto afterDeregister = restTestClient.post().uri("/api/courses/12/deregistrations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateDeregistrationRequest(List.of(300L, 302L)))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(EnrollmentDto.class)
+                .returnResult().getResponseBody();
 
-        mockMvc.perform(post("/api/courses/12/deregistrations")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(deregistrationPayload))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.courseId").value(12))
-                .andExpect(jsonPath("$.employeeIds.length()").value(1))
-                .andExpect(jsonPath("$.employeeIds[0]").value(301));
+        assertThat(afterDeregister).isNotNull();
+        assertThat(afterDeregister.courseId()).isEqualTo(12L);
+        assertThat(afterDeregister.employeeIds()).containsExactly(301L);
 
-        mockMvc.perform(get("/api/courses/12/enrollments"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.courseId").value(12))
-                .andExpect(jsonPath("$.employeeIds.length()").value(1))
-                .andExpect(jsonPath("$.employeeIds[0]").value(301));
+        EnrollmentDto listed = restTestClient.get().uri("/api/courses/12/enrollments")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(EnrollmentDto.class)
+                .returnResult().getResponseBody();
+
+        assertThat(listed).isNotNull();
+        assertThat(listed.courseId()).isEqualTo(12L);
+        assertThat(listed.employeeIds()).containsExactly(301L);
     }
-
-    private record EnrollmentRequest(Long courseId, List<Long> employeeIds) {
-    }
-
-    private record DeregistrationRequest(List<Long> employeeIds) {
-    }
-
 }
