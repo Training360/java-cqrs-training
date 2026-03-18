@@ -12,3 +12,5 @@ Transactional outbox esetén elveszik a Correlation ID
 * implementálni kell, el kell tárolni
 * publish során a headerbe kell tenni
 * query oldalon pedig ki kell olvasni a headerből, és el kell tárolni az MDC-ben, hogy a logokban is megjelenjen
+
+Enrollment és cancellation legyen idempotens

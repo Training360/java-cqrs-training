@@ -3,8 +3,6 @@ package training.cqrstraining.domain.model;
 import training.cqrstraining.domain.event.DomainEvent;
 import training.cqrstraining.domain.event.EmployeesCancelledEvent;
 import training.cqrstraining.domain.event.EmployeesEnrolledEvent;
-import training.cqrstraining.domain.exception.DuplicateEnrollmentException;
-import training.cqrstraining.domain.exception.EnrollmentNotFoundException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,17 +66,13 @@ public class Enrollment {
         if (employeeId == null) {
             throw new IllegalArgumentException("Employee ID is required.");
         }
-        if (!employeeIds.add(employeeId)) {
-            throw new DuplicateEnrollmentException(courseId.value(), employeeId.value());
-        }
+        employeeIds.add(employeeId);
     }
 
     private void cancel(EmployeeId employeeId) {
         if (employeeId == null) {
             throw new IllegalArgumentException("Employee ID is required.");
         }
-        if (!employeeIds.remove(employeeId)) {
-            throw new EnrollmentNotFoundException(courseId.value(), employeeId.value());
-        }
+        employeeIds.remove(employeeId);
     }
 }
