@@ -46,9 +46,10 @@ public class EnrollmentApplicationService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         enrollment.enrollAll(employeeIds);
-
+        // Itt kell elküldeni, mert a saved példányban már nem lesznek benne
+        enrollment.pullEvents().forEach(eventPublisher::publishEvent);
         Enrollment saved = enrollmentRepository.save(enrollment);
-        saved.pullEvents().forEach(eventPublisher::publishEvent);
+
         return toDto(saved);
     }
 
@@ -64,9 +65,10 @@ public class EnrollmentApplicationService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         enrollment.cancelAll(employeeIds);
+        enrollment.pullEvents().forEach(eventPublisher::publishEvent);
 
         Enrollment saved = enrollmentRepository.save(enrollment);
-        saved.pullEvents().forEach(eventPublisher::publishEvent);
+
         return toDto(saved);
     }
 

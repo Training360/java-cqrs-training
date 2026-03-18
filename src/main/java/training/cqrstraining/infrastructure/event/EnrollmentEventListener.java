@@ -3,13 +3,19 @@ package training.cqrstraining.infrastructure.event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
-import training.cqrstraining.domain.event.DomainEvent;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import training.cqrstraining.domain.event.EmployeesCancelledEvent;
 import training.cqrstraining.domain.event.EmployeesEnrolledEvent;
+import training.cqrstraining.domain.model.EmployeeId;
+import training.cqrstraining.infrastructure.event.stream.EmployeesEnrollmentsUpdatedStreamEvent;
+import training.cqrstraining.infrastructure.event.stream.EnrollmentStreamEvent;
+import training.cqrstraining.infrastructure.event.stream.EventType;
+
+import java.util.List;
 
 @Component
 public class EnrollmentEventListener {
@@ -26,22 +32,29 @@ public class EnrollmentEventListener {
         this.streamBridge = streamBridge;
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEmployeesEnrolled(EmployeesEnrolledEvent event) {
-        send(event, event.courseId().value());
+        send(new EmployeesEnrollmentsUpdatedStreamEvent(EventType.ENROLLED, event.courseId().value(), toEmployeeIds(event.employeeIds())));
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEmployeesCancelled(EmployeesCancelledEvent event) {
-        send(event, event.courseId().value());
+        send(new EmployeesEnrollmentsUpdatedStreamEvent(EventType.CANCELLED, event.courseId().value(), toEmployeeIds(event.employeeIds())));
     }
 
-    private void send(DomainEvent event, Object partitionKey) {
-        log.info("Publishing {} for partitionKey {}", event.getClass().getSimpleName(), partitionKey);
-        Message<DomainEvent> message = MessageBuilder.withPayload(event)
+    private void send(EnrollmentStreamEvent event) {
+        log.info("Publishing {} for partitionKey {}", event.getClass().getSimpleName(), event.courseId());
+        Message<EnrollmentStreamEvent> message = MessageBuilder.withPayload(event)
                 .setHeader(HEADER_EVENT_TYPE, event.getClass().getSimpleName())
-                .setHeader(HEADER_PARTITION_KEY, partitionKey)
+                .setHeader(HEADER_PARTITION_KEY, event.courseId())
                 .build();
         streamBridge.send(EVENTS_BINDING, message);
+    }
+
+    private List<Long> toEmployeeIds(java.util.Set<EmployeeId> employeeIds) {
+        return employeeIds.stream()
+                .map(EmployeeId::value)
+                .sorted()
+                .toList();
     }
 }

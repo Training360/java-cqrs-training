@@ -9,15 +9,15 @@ import java.util.List;
 @Repository
 public class EnrollmentQueryRepositoryJpaAdapter implements EnrollmentQueryRepository {
 
-    private final EnrollmentJpaRepository enrollmentJpaRepository;
+    private final CourseEnrollmentCountJpaRepository countJpaRepository;
 
-    public EnrollmentQueryRepositoryJpaAdapter(EnrollmentJpaRepository enrollmentJpaRepository) {
-        this.enrollmentJpaRepository = enrollmentJpaRepository;
+    public EnrollmentQueryRepositoryJpaAdapter(CourseEnrollmentCountJpaRepository countJpaRepository) {
+        this.countJpaRepository = countJpaRepository;
     }
 
     @Override
     public List<CourseEnrollmentCountDto> countEnrollmentsByCourse() {
-        return enrollmentJpaRepository.countEnrollmentsByCourse();
+        return countJpaRepository.findCourseEnrollmentCounts();
     }
 }
 

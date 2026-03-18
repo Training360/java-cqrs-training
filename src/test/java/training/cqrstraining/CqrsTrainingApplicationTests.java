@@ -12,7 +12,9 @@ import training.cqrstraining.application.command.CreateEnrollmentCommand;
 import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
 
+import java.util.Map;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -128,18 +130,59 @@ class CqrsTrainingApplicationTests {
                 .exchange()
                 .expectStatus().isCreated();
 
+        // Deregister one employee to verify decrement in the read-model projection
+        restTestClient.post().uri("/api/courses/20/deregistrations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CreateDeregistrationRequest(List.of(401L)))
+                .exchange()
+                .expectStatus().isOk();
+
         // Query enrollment counts
-        var counts = restTestClient.get().uri("/api/courses/enrollment-counts")
+        var counts = awaitEnrollmentCounts(() -> restTestClient.get().uri("/api/courses/enrollment-counts")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(new ParameterizedTypeReference<List<CourseEnrollmentCountDto>>() {})
-                .returnResult().getResponseBody();
+                .returnResult().getResponseBody());
 
         assertThat(counts).isNotNull();
-        assertThat(counts).hasSize(3)
-                .extracting(CourseEnrollmentCountDto::courseId)
-                .containsExactlyInAnyOrder(20L, 21L, 22L);
-        assertThat(counts).extracting(CourseEnrollmentCountDto::enrollmentCount)
-                .containsExactlyInAnyOrder(3L, 2L, 1L);
+        Map<Long, Long> countsByCourse = counts.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        CourseEnrollmentCountDto::courseId,
+                        CourseEnrollmentCountDto::enrollmentCount,
+                        (existing, ignored) -> existing
+                ));
+
+        assertThat(countsByCourse).containsEntry(20L, 2L);
+        assertThat(countsByCourse).containsEntry(21L, 2L);
+        assertThat(countsByCourse).containsEntry(22L, 1L);
+    }
+
+    private List<CourseEnrollmentCountDto> awaitEnrollmentCounts(Supplier<List<CourseEnrollmentCountDto>> fetcher) {
+        for (int attempt = 0; attempt < 20; attempt++) {
+            List<CourseEnrollmentCountDto> counts = fetcher.get();
+            if (counts != null) {
+                Map<Long, Long> countsByCourse = counts.stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                CourseEnrollmentCountDto::courseId,
+                                CourseEnrollmentCountDto::enrollmentCount,
+                                (existing, ignored) -> existing
+                        ));
+
+                if (countsByCourse.getOrDefault(20L, 0L) == 2L
+                        && countsByCourse.getOrDefault(21L, 0L) == 2L
+                        && countsByCourse.getOrDefault(22L, 0L) == 1L) {
+                    return counts;
+                }
+            }
+
+            try {
+                Thread.sleep(100L);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for enrollment counts projection.", ex);
+            }
+        }
+
+        return fetcher.get();
     }
 }
