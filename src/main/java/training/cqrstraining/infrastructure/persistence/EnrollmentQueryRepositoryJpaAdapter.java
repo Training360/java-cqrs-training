@@ -19,5 +19,11 @@ public class EnrollmentQueryRepositoryJpaAdapter implements EnrollmentQueryRepos
     public List<CourseEnrollmentCountDto> countEnrollmentsByCourse() {
         return countJpaRepository.findCourseEnrollmentCounts();
     }
+
+    @Override
+    public CourseEnrollmentCountDto countEnrollmentsByCourse(Long courseId) {
+        return countJpaRepository.findCourseEnrollmentCountByCourseId(courseId)
+                .orElseGet(() -> new CourseEnrollmentCountDto(courseId, 0L, 0L));
+    }
 }
 

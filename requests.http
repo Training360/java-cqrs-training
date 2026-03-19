@@ -80,3 +80,10 @@ GET {{baseUrl}}/courses/99/enrollments
 
 ### Hány darab jelentkező van képzésenként (DB szinten aggregált)
 GET {{baseUrl}}/courses/enrollment-counts
+
+### Egy adott kurzus jelentkezőszáma (DB szinten aggregált)
+GET {{baseUrl}}/courses/enrollment-counts/{{courseId}}
+
+### ETag
+GET {{baseUrl}}/courses/enrollment-counts/{{courseId}}
+If-None-Match: "1"

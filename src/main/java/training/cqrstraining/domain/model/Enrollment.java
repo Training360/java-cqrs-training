@@ -14,22 +14,31 @@ public class Enrollment {
 
     private final CourseId courseId;
     private final Set<EmployeeId> employeeIds;
+    private final Long version;
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     public Enrollment(CourseId courseId) {
-        this(courseId, new LinkedHashSet<>());
+        this(courseId, new LinkedHashSet<>(), 0L);
     }
 
     public Enrollment(CourseId courseId, Set<EmployeeId> employeeIds) {
+        this(courseId, employeeIds, 0L);
+    }
+
+    public Enrollment(CourseId courseId, Set<EmployeeId> employeeIds, Long version) {
         if (courseId == null) {
             throw new IllegalArgumentException("Course ID is required.");
         }
         if (employeeIds == null) {
             throw new IllegalArgumentException("Employee IDs are required.");
         }
+        if (version == null || version < 0L) {
+            throw new IllegalArgumentException("Version must be non-negative.");
+        }
 
         this.courseId = courseId;
         this.employeeIds = new LinkedHashSet<>(employeeIds);
+        this.version = version;
     }
 
     public CourseId courseId() {
@@ -38,6 +47,10 @@ public class Enrollment {
 
     public Set<EmployeeId> employeeIds() {
         return Collections.unmodifiableSet(employeeIds);
+    }
+
+    public Long version() {
+        return version;
     }
 
     public List<DomainEvent> pullEvents() {

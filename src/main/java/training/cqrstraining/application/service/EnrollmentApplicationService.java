@@ -7,6 +7,7 @@ import training.cqrstraining.application.command.CreateCancellationCommand;
 import training.cqrstraining.application.dto.CourseEnrollmentCountDto;
 import training.cqrstraining.application.dto.EnrollmentDto;
 import training.cqrstraining.application.query.EnrollmentQueryRepository;
+import training.cqrstraining.domain.event.DomainEvent;
 import training.cqrstraining.domain.exception.EnrollmentNotFoundException;
 import training.cqrstraining.domain.model.CourseId;
 import training.cqrstraining.domain.model.EmployeeId;
@@ -46,8 +47,9 @@ public class EnrollmentApplicationService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         enrollment.enrollAll(employeeIds);
-        outboxEventStore.store(enrollment.pullEvents());
+        List<DomainEvent> pendingEvents = enrollment.pullEvents();
         Enrollment saved = enrollmentRepository.save(enrollment);
+        outboxEventStore.store(pendingEvents, saved.version());
 
         return toDto(saved);
     }
@@ -64,9 +66,10 @@ public class EnrollmentApplicationService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         enrollment.cancelAll(employeeIds);
-        outboxEventStore.store(enrollment.pullEvents());
+        List<DomainEvent> pendingEvents = enrollment.pullEvents();
 
         Enrollment saved = enrollmentRepository.save(enrollment);
+        outboxEventStore.store(pendingEvents, saved.version());
 
         return toDto(saved);
     }
@@ -76,7 +79,7 @@ public class EnrollmentApplicationService {
         CourseId courseId = new CourseId(courseIdValue);
         return enrollmentRepository.findByCourseId(courseId)
                 .map(this::toDto)
-                .orElse(new EnrollmentDto(courseId.value(), List.of()));
+                .orElse(new EnrollmentDto(courseId.value(), List.of(), 0L));
     }
 
     @Transactional(readOnly = true)
@@ -92,12 +95,17 @@ public class EnrollmentApplicationService {
         return enrollmentQueryRepository.countEnrollmentsByCourse();
     }
 
+    @Transactional(readOnly = true)
+    public CourseEnrollmentCountDto countEnrollmentsByCourse(Long courseId) {
+        return enrollmentQueryRepository.countEnrollmentsByCourse(courseId);
+    }
+
     private EnrollmentDto toDto(Enrollment enrollment) {
         List<Long> employeeIds = enrollment.employeeIds()
                 .stream()
                 .map(EmployeeId::value)
                 .sorted()
                 .toList();
-        return new EnrollmentDto(enrollment.courseId().value(), employeeIds);
+        return new EnrollmentDto(enrollment.courseId().value(), employeeIds, enrollment.version());
     }
 }

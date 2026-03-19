@@ -31,16 +31,18 @@ public class OutboxEventStore {
         this.objectMapper = objectMapper;
     }
 
-    public void store(List<DomainEvent> domainEvents) {
+    public void store(List<DomainEvent> domainEvents, Long aggregateVersion) {
         if (domainEvents == null || domainEvents.isEmpty()) {
             return;
         }
+
+        long safeVersion = aggregateVersion == null ? 0L : aggregateVersion;
 
         Instant now = Instant.now();
         List<OutboxEventJpaEntity> entities = new ArrayList<>(domainEvents.size());
 
         for (DomainEvent domainEvent : domainEvents) {
-            EmployeesEnrollmentsUpdatedStreamEvent streamEvent = toStreamEvent(domainEvent);
+            EmployeesEnrollmentsUpdatedStreamEvent streamEvent = toStreamEvent(domainEvent, safeVersion);
             String payload = toPayload(streamEvent);
             entities.add(new OutboxEventJpaEntity(
                     UUID.randomUUID(),
@@ -58,13 +60,14 @@ public class OutboxEventStore {
         outboxRepository.saveAll(entities);
     }
 
-    private EmployeesEnrollmentsUpdatedStreamEvent toStreamEvent(DomainEvent event) {
+    private EmployeesEnrollmentsUpdatedStreamEvent toStreamEvent(DomainEvent event, Long aggregateVersion) {
         if (event instanceof EmployeesEnrolledEvent enrolledEvent) {
             return new EmployeesEnrollmentsUpdatedStreamEvent(
                     EventType.ENROLLED,
                     enrolledEvent.courseId().value(),
                     toEmployeeIds(enrolledEvent.employeeIds()),
-                    enrolledEvent.totalEnrollmentCount()
+                    enrolledEvent.totalEnrollmentCount(),
+                    aggregateVersion
             );
         }
 
@@ -73,7 +76,8 @@ public class OutboxEventStore {
                     EventType.CANCELLED,
                     cancelledEvent.courseId().value(),
                     toEmployeeIds(cancelledEvent.employeeIds()),
-                    cancelledEvent.totalEnrollmentCount()
+                    cancelledEvent.totalEnrollmentCount(),
+                    aggregateVersion
             );
         }
 

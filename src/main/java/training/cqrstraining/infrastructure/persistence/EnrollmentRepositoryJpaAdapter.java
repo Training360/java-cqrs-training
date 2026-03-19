@@ -36,7 +36,7 @@ public class EnrollmentRepositoryJpaAdapter implements EnrollmentRepository {
                 .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
         entity.setEmployeeIds(employeeIds);
 
-        EnrollmentJpaEntity saved = jpaRepository.save(entity);
+        EnrollmentJpaEntity saved = jpaRepository.saveAndFlush(entity);
         return toDomain(saved);
     }
 
@@ -53,7 +53,7 @@ public class EnrollmentRepositoryJpaAdapter implements EnrollmentRepository {
                 .stream()
                 .map(EmployeeId::new)
                 .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
-
-        return new Enrollment(new CourseId(entity.getCourseId()), employees);
+        Long version = entity.getVersion() == null ? 0L : entity.getVersion();
+        return new Enrollment(new CourseId(entity.getCourseId()), employees, version);
     }
 }

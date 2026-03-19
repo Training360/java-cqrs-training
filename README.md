@@ -14,3 +14,13 @@ Transactional outbox esetén elveszik a Correlation ID
 * query oldalon pedig ki kell olvasni a headerből, és el kell tárolni az MDC-ben, hogy a logokban is megjelenjen
 
 Enrollment és cancellation legyen idempotens
+
+Version az entitásban, és a query oldalon is
+save helyett saveAndFlush
+ráadásul külön kell átadni, mert az eventben még nincs benne
+
+ETag
+
+Ha nem jön SSE: polling
+
+Polling timeout: hibaüzenet

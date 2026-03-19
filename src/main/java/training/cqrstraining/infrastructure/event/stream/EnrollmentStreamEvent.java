@@ -7,5 +7,7 @@ public interface EnrollmentStreamEvent {
     Long courseId();
 
     List<Long> employeeIds();
+
+    Long version();
 }
 

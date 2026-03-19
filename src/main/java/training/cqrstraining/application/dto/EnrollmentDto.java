@@ -2,5 +2,5 @@ package training.cqrstraining.application.dto;
 
 import java.util.List;
 
-public record EnrollmentDto(Long courseId, List<Long> employeeIds) {
+public record EnrollmentDto(Long courseId, List<Long> employeeIds, Long version) {
 }

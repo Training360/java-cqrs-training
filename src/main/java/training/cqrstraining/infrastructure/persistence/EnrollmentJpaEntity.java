@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -36,6 +37,10 @@ public class EnrollmentJpaEntity {
     @Column(name = "employee_id", nullable = false)
     private Set<Long> employeeIds = new LinkedHashSet<>();
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     protected EnrollmentJpaEntity() {
     }
 
@@ -54,6 +59,10 @@ public class EnrollmentJpaEntity {
 
     public Set<Long> getEmployeeIds() {
         return employeeIds;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     public void setEmployeeIds(Set<Long> employeeIds) {
