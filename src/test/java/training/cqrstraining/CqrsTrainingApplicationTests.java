@@ -68,7 +68,7 @@ class CqrsTrainingApplicationTests {
     }
 
     @Test
-    void duplicateEnrollmentReturnsConflict() {
+    void duplicateEnrollmentAcceptedBecauseIdempotent() {
         restTestClient.post().uri("/api/enrollments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new CreateEnrollmentCommand(11L, List.of(201L)))
@@ -79,7 +79,7 @@ class CqrsTrainingApplicationTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new CreateEnrollmentCommand(11L, List.of(201L, 202L)))
                 .exchange()
-                .expectStatus().isEqualTo(409);
+                .expectStatus().isCreated();
 
         EnrollmentDto listed = restTestClient.get().uri("/api/courses/11/enrollments")
                 .exchange()
@@ -88,7 +88,7 @@ class CqrsTrainingApplicationTests {
                 .returnResult().getResponseBody();
 
         assertThat(listed).isNotNull();
-        assertThat(listed.employeeIds()).containsExactly(201L);
+        assertThat(listed.employeeIds()).containsExactly(201L, 202L);
     }
 
     @Test

@@ -9,7 +9,7 @@ POST {{baseUrl}}/enrollments
 Content-Type: application/json
 
 {
-  "courseId": 42,
+  "courseId": 43,
   "employeeIds": [101]
 }
 
@@ -86,4 +86,4 @@ GET {{baseUrl}}/courses/enrollment-counts/{{courseId}}
 
 ### ETag
 GET {{baseUrl}}/courses/enrollment-counts/{{courseId}}
-If-None-Match: "1"
+If-None-Match: "3"

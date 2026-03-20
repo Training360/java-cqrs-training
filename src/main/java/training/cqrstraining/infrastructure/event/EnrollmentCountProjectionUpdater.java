@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 import training.cqrstraining.infrastructure.persistence.CourseEnrollmentCountJpaEntity;
 import training.cqrstraining.infrastructure.persistence.CourseEnrollmentCountJpaRepository;
 
+import java.util.Optional;
+
 @Component
 public class EnrollmentCountProjectionUpdater {
 
@@ -24,17 +26,22 @@ public class EnrollmentCountProjectionUpdater {
     private boolean updateCount(Long courseId, Long totalEnrollmentCount, Long version) {
         long safeVersion = version == null ? 0L : version;
 
-        CourseEnrollmentCountJpaEntity readModel = countRepository.findById(courseId)
-                .orElseGet(() -> new CourseEnrollmentCountJpaEntity(courseId, 0L, 0L));
+        Optional<CourseEnrollmentCountJpaEntity> found = countRepository.findById(courseId);
 
-        if (safeVersion <= readModel.getEnrollmentVersion()) {
-            return false;
+        if (found.isEmpty()) {
+            countRepository.save(new CourseEnrollmentCountJpaEntity(courseId, totalEnrollmentCount, version));
+            return true;
         }
-
-        readModel.setTotalEnrollmentCount(totalEnrollmentCount);
-        readModel.setEnrollmentVersion(safeVersion);
-        countRepository.save(readModel);
-        return true;
+        else {
+            CourseEnrollmentCountJpaEntity readModel = found.get();
+            if (safeVersion <= readModel.getEnrollmentVersion()) {
+                return false;
+            }
+            readModel.setTotalEnrollmentCount(totalEnrollmentCount);
+            readModel.setEnrollmentVersion(safeVersion);
+            countRepository.save(readModel);
+            return true;
+        }
     }
 }
 
