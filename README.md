@@ -1,5 +1,11 @@
 # CQRS Training - Course Enrollments
 
+A CQRS esetén könnyű kijelenteni, hogy csak szétválasztjuk az írás és olvasási műveleteket.
+Azonban a konkrét implementáció során több problémába is ütközhetük, különösen akkor, ha
+külön folyamatként fut a két oldal, és közöttük aszinkron üzenetküldés van. Ekkor megjelenhetnek az 
+elosztottságból adódó bizonytalanságok, mit lát a UI, mit lát egy másik párhuzamos lekérdezés, és mit 
+lát egy másik párhuzamos módosítás (utóbbi kettő akár UI, akár másik microservice felől)?
+
 Kell futó Kafka, mely a következőképp indítható:
 
 ```shell
